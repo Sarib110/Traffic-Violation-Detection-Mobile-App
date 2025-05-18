@@ -36,11 +36,11 @@ export default function ZoomControls({
   };
 
   return (
-    <View style={{ flex: 1, padding: 10 }}>
+    <View style={{ flex: 1, padding: 0}}>
       {zoomOptions.map((z, i) => {
-        const angle = (i / zoomOptions.length / 3) * 2 * Math.PI - Math.PI / 2; // Start at 12 o'clock
-        const x = Math.cos(angle) * radius + 40;
-        const y = Math.sin(angle) * radius + height / 4;
+        const angle = (i / zoomOptions.length / 3.5) * 2 * Math.PI - Math.PI / 2; // Start at 12 o'clock
+        const x = Math.cos(angle) * radius + 25;
+        const y = Math.sin(angle) * radius + height / 4 -35;
 
         return (
           <Animated.View
@@ -55,8 +55,8 @@ export default function ZoomControls({
             <TouchableHighlight
               onPress={() => handleZoomPress(z)}
               style={{
-                width: 50,
-                height: 50,
+                width: 40,
+                height: 40,
                 borderRadius: 25,
                 backgroundColor: zoom === z ? "#ffffff" : "#ffffff30",
                 justifyContent: "center",
@@ -86,8 +86,8 @@ export default function ZoomControls({
           justifyContent: "center",
           alignItems: "center",
           position: "absolute",
-          left: 30,
-          top: height / 4,
+          left: 45,
+          top: height / 4 - 90,
         }}
       >
         <Text style={{ color: "white", fontWeight: "600" }}>X</Text>

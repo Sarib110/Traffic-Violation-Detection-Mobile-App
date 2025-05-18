@@ -31,12 +31,12 @@ export default function ExposureControls({
   };
 
   return (
-    <View style={{ flex: 1, padding: 10 }}>
+    <View style={{ flex: 1, padding: 0 }}>
       {exposureOptions.map((exp, i) => {
         const angle =
-          (i / exposureOptions.length / 3) * 2 * Math.PI - Math.PI / 2;
-        const x = width - Math.cos(angle) * radius - 90; // Align to the right
-        const y = Math.sin(angle) * radius + height / 4;
+          (i / exposureOptions.length / 3.5) * 2 * Math.PI - Math.PI / 2;
+        const x = width - Math.cos(angle) * radius - 60; // Align to the right
+        const y = Math.sin(angle) * radius + height / 4-35;
 
         return (
           <Animated.View
@@ -51,8 +51,8 @@ export default function ExposureControls({
             <TouchableHighlight
               onPress={() => handleExposurePress(exp)}
               style={{
-                width: 50,
-                height: 50,
+                width: 40,
+                height: 40,
                 borderRadius: 25,
                 backgroundColor: exposure === exp ? "#ffffff" : "#ffffff30",
                 justifyContent: "center",
@@ -81,8 +81,8 @@ export default function ExposureControls({
           justifyContent: "center",
           alignItems: "center",
           position: "absolute",
-          right: 30,
-          top: height / 4,
+          right: 45,
+          top: height / 4-90,
         }}
       >
         <Text style={{ color: "white", fontWeight: "600" }}>X</Text>
