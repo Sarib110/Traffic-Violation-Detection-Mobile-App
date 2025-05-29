@@ -124,7 +124,7 @@ export default function SettingsScreen(): React.ReactNode {
             <Image
               alt=""
               source={{
-                uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80',
+                uri: 'file:///data/user/0/dev.codewithbeto.obscura/files/profile_1747824310613.jpg',
               }}
               style={styles.profileAvatar} />
 
@@ -329,6 +329,23 @@ export default function SettingsScreen(): React.ReactNode {
               name="chevron-right"
               size={20} />
           </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  router.replace('/Help');
+                }}
+                style={[styles.row, { backgroundColor: colors.rowBackground }]}
+              >
+                <View style={[styles.rowIcon, { backgroundColor: '#32c759' }]}>
+                  <Feather color="#fff" name="help-circle" size={20} />
+                </View>
+
+                <Text style={[styles.rowLabel, { color: colors.text }]}>Help</Text>
+
+                <View style={styles.rowSpacer} />
+
+                <Feather color={colors.chevronColor} name="chevron-right" size={20} />
+              </TouchableOpacity>
+          
           <TouchableOpacity
             onPress={() => {
               logout(); // Use the logout function from useAuth instead of navigating directly

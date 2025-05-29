@@ -48,6 +48,10 @@ export default function RootLayout() {
               options={{ presentation: "modal", headerShown: false }}
             />
             <Stack.Screen
+              name="Help"
+              options={{ presentation: "modal", headerShown: false }}
+            />
+            <Stack.Screen
               name="Camera"
               options={{ presentation: "modal", headerShown: false }}
             />

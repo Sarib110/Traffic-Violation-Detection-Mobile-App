@@ -17,6 +17,8 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { saveToLibraryAsync } from "expo-media-library";
 import * as FileSystem from 'expo-file-system';
+// Import our storage service
+import { saveReport } from './services/reportStorage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -40,6 +42,7 @@ export default function MediaScreen() {
   const [isSending, setIsSending] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processedFileUri, setProcessedFileUri] = useState<string | null>(null);
+  const [reportData, setReportData] = useState<any>(null);
   
   // Video reference
   const videoRef = useRef(null);
@@ -147,9 +150,6 @@ export default function MediaScreen() {
       
       console.log("Preparing to upload video from:", preparedMediaUri);
       
-      // Since direct progress tracking might not be available in your Expo version,
-      // we'll use a simulated progress approach with fetch
-      
       // Create form data for React Native
       const formData = new FormData();
       formData.append('video', {
@@ -195,6 +195,25 @@ export default function MediaScreen() {
         // Mark as processed
         setProcessedFileUri(preparedMediaUri);
         
+        // NEW CODE: Store the ML model response data
+        // Create a report object with the response data
+        const newReport = {
+          id: `report_${timestamp}`,
+          timestamp: new Date().toISOString(),
+          videoUri: processedFileUri || preparedMediaUri,
+          location: responseData.location || 'Mianwali',
+          violationType: responseData.violation_type || 'Traffic violation',
+          confidence: responseData.confidence || 85,
+          details: responseData.details || {},
+          status: responseData.status || 'submitted',
+          // Store any additional data from the ML model response
+          mlResults: responseData,
+        };
+        
+        // Save the report to storage
+        await saveReport(newReport);
+        setReportData(newReport);
+        
         // Show a nice thank you message
         setTimeout(() => {
           Alert.alert(
@@ -202,9 +221,9 @@ export default function MediaScreen() {
             "Your traffic report has been successfully submitted and recorded. Thank you for helping to keep our roads safe.",
             [
               { 
-                text: "Continue", 
-                style: "default",
-                onPress: () => console.log("Report acknowledged") 
+                text: "Close", 
+                style: "cancel",
+                onPress: () => router.back()
               }
             ],
             { cancelable: false }

@@ -2,6 +2,8 @@ import * as React from "react";
 import { useAuth } from "./auth-context";
 import Camera from "./Camera";
 import { Redirect } from "expo-router";
+import { LogBox } from "react-native";
+LogBox.ignoreAllLogs(true); // Suppress all warnings
 
 export default function HomeScreen() {
   const { isAuthenticated } = useAuth();

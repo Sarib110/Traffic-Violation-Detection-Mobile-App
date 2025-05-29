@@ -19,6 +19,7 @@ import {
   useCameraDevice,
   useCameraDevices,
   useCameraPermission,
+  useCameraFormat,
 } from "react-native-vision-camera";
 import { Redirect, useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
@@ -46,9 +47,18 @@ export default function CameraScreen() {
   const devices = useCameraDevices();
   const [cameraPosition, setCameraPosition] = useState<"front" | "back">("back");
   const device = useCameraDevice(cameraPosition);
+  
+  // Enhanced format selection for better front camera quality
+  const format = useCameraFormat(device, [
+    { videoResolution: { width: 1920, height: 1080 } },
+    { videoAspectRatio: 16/9 },
+    { fps: 30 }
+  ]);
+  
   const [zoom, setZoom] = useState(1);
   const [flash, setFlash] = useState<"off" | "on">("off");
   const [torch, setTorch] = useState<"off" | "on">("off");
+  const [exposure, setExposure] = useState(0);
   const redirectToPermissions =
     !hasPermission || microphonePermission === "not-determined";
 
@@ -56,13 +66,20 @@ export default function CameraScreen() {
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingTimer = useRef<NodeJS.Timeout | null>(null);
   const [showZoomIndicator, setShowZoomIndicator] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
 
   // Update zoom when device changes
   useEffect(() => {
     if (device?.neutralZoom) {
       setZoom(device.neutralZoom);
     }
-  }, [device]);
+    // Adjust exposure for front camera to improve contrast
+    if (cameraPosition === "front") {
+      setExposure(0.3); // Slightly brighter for front camera
+    } else {
+      setExposure(0);
+    }
+  }, [device, cameraPosition]);
 
   // Create a pan responder for the capture button
   const panResponder = useRef(
@@ -117,23 +134,6 @@ export default function CameraScreen() {
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
-  const takePicture = async () => {
-    try {
-      if (camera.current == null) throw new Error("Camera ref is null!");
-
-      const photo = await camera.current.takePhoto({
-        flash: flash,
-        enableShutterSound: false,
-      });
-      router.replace({
-        pathname: "/media",
-        params: { media: photo.path, type: "photo" },
-      });
-    } catch (e) {
-      console.error("Failed to take photo!", e);
-    }
-  };
-
   const startRecording = async () => {
     try {
       if (camera.current == null) throw new Error("Camera ref is null!");
@@ -180,6 +180,14 @@ export default function CameraScreen() {
     }
   };
 
+  const handleCapturePress = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
   if (redirectToPermissions) return <Redirect href={"/permissions"} />;
   if (!device) return null;
 
@@ -189,15 +197,29 @@ export default function CameraScreen() {
       <Camera
         ref={camera}
         style={styles.camera}
-        photo={true}
+        photo={false}
         video={true}
         zoom={zoom}
         device={device!}
+        format={format}
+        exposure={exposure}
         isActive={true}
         resizeMode="cover"
         preview={true}
         torch={torch}
       />
+      
+      {/* Grid Overlay */}
+      {showGrid && (
+        <View style={styles.gridOverlay}>
+          {/* Vertical lines */}
+          <View style={[styles.gridLine, { left: '33.33%', width: 1, height: '100%' }]} />
+          <View style={[styles.gridLine, { left: '66.66%', width: 1, height: '100%' }]} />
+          {/* Horizontal lines */}
+          <View style={[styles.gridLine, { top: '33.33%', height: 1, width: '100%' }]} />
+          <View style={[styles.gridLine, { top: '66.66%', height: 1, width: '100%' }]} />
+        </View>
+      )}
       
       {/* Side Controls */}
       <View style={styles.sideControlsContainer}>
@@ -231,16 +253,14 @@ export default function CameraScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity 
-          onPress={() => {
-            const link = Platform.select({
-              ios: "photos-redirect://",
-              android: "content://media/external/images/media",
-            });
-            Linking.openURL(link!);
-          }}
+          onPress={() => setShowGrid(!showGrid)}
           style={styles.sideControlButton}
         >
-          <Ionicons name="image" size={24} color="white" />
+          <Ionicons 
+            name={showGrid ? "grid" : "grid-outline"} 
+            size={24} 
+            color="white" 
+          />
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -254,15 +274,15 @@ export default function CameraScreen() {
       {/* Recording Indicator */}
       {isRecording && (
         <View style={styles.recordingIndicator}>
-          <Ionicons name="recording" size={20} color="white" />
+          <View style={styles.recordingDot} />
           <Text style={styles.recordingText}>
-            {formatTime(recordingTime)}
+            REC {formatTime(recordingTime)}
           </Text>
         </View>
       )}
 
       {/* Zoom Indicator */}
-      {isRecording && showZoomIndicator && (
+      {/* {isRecording && showZoomIndicator && (
         <View style={styles.zoomIndicatorContainer}>
           <View style={styles.zoomIndicator}>
             <Text style={styles.zoomText}>{zoom.toFixed(1)}x</Text>
@@ -274,9 +294,16 @@ export default function CameraScreen() {
             <Ionicons name="arrow-down" size={16} color="white" />
           </View>
         </View>
+      )} */}
+
+      {/* Recording Instructions */}
+      {!isRecording && (
+        <View style={styles.instructionsContainer}>
+          <Text style={styles.instructionText}>Tap to start recording</Text>
+        </View>
       )}
 
-      {/* Bottom Controls - Only Capture Button */}
+      {/* Bottom Controls - Only Video Capture Button */}
       <SafeAreaView style={styles.bottomControlsContainer}>
         <Animated.View
           style={[
@@ -290,29 +317,27 @@ export default function CameraScreen() {
           {...(isRecording ? panResponder.panHandlers : {})}
         >
           <TouchableOpacity
-            onPress={takePicture}
-            onLongPress={startRecording}
-            onPressOut={(e) => {
-              // Only stop recording if it was a long press release, not a tap
-              if (isRecording) {
-                stopRecording();
-              }
-            }}
+            onPress={handleCapturePress}
             style={[
               styles.captureButton, 
               { 
-                backgroundColor: isRecording ? "rgba(255,0,0,0.7)" : "transparent",
-                borderColor: isRecording ? "red" : "white"
+                backgroundColor: isRecording ? "rgba(255,0,0,0.8)" : "rgba(255,255,255,0.2)",
+                borderColor: isRecording ? "red" : "white",
+                transform: [{ scale: isRecording ? 1.1 : 1 }]
               }
             ]}
           >
-            <FontAwesome5 
-              name={isRecording ? "stop-circle" : "dot-circle"} 
-              size={65} 
-              color="white" 
-            />
+            {isRecording ? (
+              <View style={styles.stopIcon} />
+            ) : (
+              <FontAwesome5 name="video" size={32} color="white" />
+            )}
           </TouchableOpacity>
         </Animated.View>
+        
+        {isRecording && (
+          <Text style={styles.captureInstructionText}>Tap to stop recording</Text>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -353,14 +378,20 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,0,0,0.7)',
+    backgroundColor: 'rgba(255,0,0,0.8)',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'white',
+    marginRight: 8,
+  },
   recordingText: {
     color: 'white',
-    marginLeft: 8,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -390,6 +421,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginVertical: 2,
   },
+  instructionsContainer: {
+    position: 'absolute',
+    bottom: 130,
+    alignSelf: 'center',
+  },
+  instructionText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
   bottomControlsContainer: {
     position: 'absolute',
     bottom: 30,
@@ -406,5 +448,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 3,
     elevation: 5,
+  },
+  stopIcon: {
+    width: 24,
+    height: 24,
+    backgroundColor: 'white',
+    borderRadius: 4,
+  },
+  captureInstructionText: {
+    color: 'white',
+    fontSize: 14,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  gridOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+  },
+  gridLine: {
+    position: 'absolute',
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
 });
