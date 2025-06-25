@@ -116,11 +116,11 @@ const ReportCard = ({ report }: { report: Report }) => {
         {report.confidence && (
           <View style={styles.detailRow}>
             <View style={styles.iconContainer}>
-              <Text style={styles.icon}>🎯</Text>
+              <Text style={styles.icon}>🙍‍♂️</Text>
             </View>
             <View style={styles.textContainer}>
-              <Text style={styles.label}>Confidence</Text>
-              <Text style={styles.value}>{report.confidence}%</Text>
+              <Text style={styles.label}>Citizen ID</Text>
+              <Text style={styles.value}>LA-7431</Text>
             </View>
           </View>
         )}

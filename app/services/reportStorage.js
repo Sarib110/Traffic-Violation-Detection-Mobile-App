@@ -83,6 +83,7 @@ export const deleteReport = async (reportId) => {
   }
 };
 
+
 /**
  * Clear all stored reports
  * @returns {Promise<void>}

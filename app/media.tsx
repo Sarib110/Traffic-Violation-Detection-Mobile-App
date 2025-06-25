@@ -203,7 +203,7 @@ export default function MediaScreen() {
           videoUri: processedFileUri || preparedMediaUri,
           location: responseData.location || 'Mianwali',
           violationType: responseData.violation_type || 'Traffic violation',
-          confidence: responseData.confidence || 85,
+          confidence: responseData.average_confidence || 85,
           details: responseData.details || {},
           status: responseData.status || 'submitted',
           // Store any additional data from the ML model response

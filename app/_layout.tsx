@@ -59,6 +59,10 @@ export default function RootLayout() {
               name="ContactUs"
               options={{ presentation: "modal", headerShown: false }}
             />
+            <Stack.Screen
+              name="Chat"
+              options={{ presentation: "modal", headerShown: false }}
+            />
             <Stack.Screen 
               name="login" 
               options={{ headerShown: false }} 

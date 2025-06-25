@@ -184,7 +184,9 @@ const Help: React.FC = () => {
               <Ionicons name="videocam-outline" size={24} color="#007AFF" />
               <Text style={styles.quickActionText}>Video Tutorial</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionCard}>
+            
+            <TouchableOpacity style={styles.quickActionCard}
+            onPress={() => router.replace("/Chat")}>
               <Ionicons name="chatbubble-outline" size={24} color="#007AFF" />
               <Text style={styles.quickActionText}>Live Chat</Text>
             </TouchableOpacity>
